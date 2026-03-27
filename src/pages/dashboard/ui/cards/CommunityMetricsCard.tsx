@@ -8,9 +8,8 @@ export function CommunityMetricsCard() {
   return (
     <Card>
       <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="text-[10px] font-semibold tracking-[0.22em] text-gray-400">커뮤니티 지표</div>
-          <div className="mt-2 text-[26px] font-semibold text-gray-900">가입 멤버 수</div>
+        <div className="text-[26px] font-semibold text-gray-900">
+          가입 회원 수
         </div>
 
         <Segmented />
@@ -21,12 +20,20 @@ export function CommunityMetricsCard() {
       <div className="mt-6 flex items-end justify-between gap-6">
         <div className="flex items-end gap-10">
           <div>
-            <div className="text-[10px] font-semibold tracking-wide text-gray-400">현재</div>
-            <div className="mt-1 text-[20px] font-semibold text-gray-900">12,482</div>
+            <div className="text-[10px] font-semibold tracking-wide text-gray-400">
+              현재
+            </div>
+            <div className="mt-1 text-[20px] font-semibold text-gray-900">
+              12,482
+            </div>
           </div>
           <div>
-            <div className="text-[10px] font-semibold tracking-wide text-gray-400">평균 증가</div>
-            <div className="mt-1 text-[20px] font-semibold text-gray-900">842/mo</div>
+            <div className="text-[10px] font-semibold tracking-wide text-gray-400">
+              평균 증가
+            </div>
+            <div className="mt-1 text-[20px] font-semibold text-gray-900">
+              842/mo
+            </div>
           </div>
         </div>
 
@@ -57,4 +64,3 @@ export function CommunityMetricsCard() {
     </Card>
   )
 }
-

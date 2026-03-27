@@ -2,10 +2,11 @@ import { Icon } from './components/Icon'
 
 const navItems = [
   { id: 'dashboard', label: '대시보드', active: true },
-  { id: 'analytics', label: '분석', active: false },
-  { id: 'curation', label: '큐레이션', active: false },
-  { id: 'reports', label: '리포트', active: false },
-  { id: 'team', label: '팀', active: false },
+  { id: 'users', label: '회원관리', active: false },
+  { id: 'jobs', label: '공고관리', active: false },
+  { id: 'stores', label: '업장관리', active: false },
+  { id: 'reports', label: '신고관리', active: false },
+  { id: 'system', label: '시스템관리', active: false },
 ] as const
 
 export function Sidebar() {
@@ -38,13 +39,15 @@ export function Sidebar() {
                   name={
                     item.id === 'dashboard'
                       ? 'grid'
-                      : item.id === 'analytics'
-                        ? 'chart'
-                        : item.id === 'curation'
-                          ? 'sparkles'
-                          : item.id === 'reports'
-                            ? 'file'
-                            : 'users'
+                      : item.id === 'users'
+                        ? 'users'
+                        : item.id === 'jobs'
+                          ? 'file'
+                          : item.id === 'stores'
+                            ? 'grid'
+                            : item.id === 'reports'
+                              ? 'file'
+                              : 'settings'
                   }
                   className="h-5 w-5"
                 />
