@@ -1,6 +1,6 @@
-import { HomePage } from '@/pages/home'
+import { DashboardPage } from '@/pages/dashboard'
 
 export function App() {
-  return <HomePage />
+  return <DashboardPage />
 }
 
