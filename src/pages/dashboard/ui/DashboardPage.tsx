@@ -4,6 +4,7 @@ import { CommunityMetricsCard } from './cards/CommunityMetricsCard'
 import { EntityGrowthCard } from './cards/EntityGrowthCard'
 import { LiveFeedCard } from './cards/LiveFeedCard'
 import { MonthlyAvgCard } from './cards/MonthlyAvgCard'
+import { WeeklyActiveUsersCard } from './cards/WeeklyActiveUsersCard'
 
 export function DashboardPage() {
   return (
@@ -17,7 +18,7 @@ export function DashboardPage() {
           <div className="flex-1 px-8 pb-10">
             <div className="grid grid-cols-12 gap-6">
               {/* 왼쪽 큰 카드 라인 */}
-              <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+              <div className="col-span-12 lg:col-span-8 flex flex-col gap-[28px]">
                 <EntityGrowthCard />
                 <CommunityMetricsCard />
               </div>
@@ -26,6 +27,7 @@ export function DashboardPage() {
               <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
                 <LiveFeedCard />
                 <MonthlyAvgCard />
+                <WeeklyActiveUsersCard />
               </div>
             </div>
           </div>
