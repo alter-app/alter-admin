@@ -1,7 +1,13 @@
 import { Card } from '../components/Card'
 import { Icon } from '../components/Icon'
 
-export function WeeklyActiveUsersCard() {
+export function WeeklyActiveUsersCard({
+  activeUserCount,
+  loading,
+}: {
+  activeUserCount: number
+  loading: boolean
+}) {
   return (
     <Card>
       <div className="flex items-center justify-between">
@@ -9,12 +15,12 @@ export function WeeklyActiveUsersCard() {
           <Icon name="bell" className="h-5 w-5" />
         </div>
         <div className="text-[10px] font-semibold tracking-wide text-gray-400">
-          주간 평균
+          주간 요약
         </div>
       </div>
 
       <div className="mt-5 text-[56px] font-semibold leading-none text-gray-900">
-        1,284
+        {loading ? '-' : activeUserCount.toLocaleString('ko-KR')}
       </div>
       <div className="mt-2 text-[11px] font-semibold tracking-wide text-gray-400">
         이번 주 활성 사용자

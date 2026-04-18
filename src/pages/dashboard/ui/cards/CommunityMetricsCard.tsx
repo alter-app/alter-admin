@@ -1,11 +1,22 @@
 import { Card } from '../components/Card'
-import { Icon } from '../components/Icon'
-import { MetricRow } from '../components/MetricRow'
 import { Pill } from '../components/Pill'
 import { Segmented } from '../components/Segmented'
 import { SimpleLineChart } from '../components/charts/SimpleLineChart'
 
-export function CommunityMetricsCard() {
+type ChartPoint = {
+  label: string
+  count: number
+}
+
+export function CommunityMetricsCard({
+  growthRate,
+  dataPoints,
+  loading,
+}: {
+  growthRate: number
+  dataPoints: ChartPoint[]
+  loading: boolean
+}) {
   return (
     <Card>
       <div className="flex items-start justify-between gap-4">
@@ -13,12 +24,14 @@ export function CommunityMetricsCard() {
           가입 회원 수
         </div>
         <div className="flex items-center gap-2">
-          <Pill tone="emerald">전년 대비 +12.4%</Pill>
+          <Pill tone="emerald">
+            {loading ? '로딩 중' : `전년 대비 ${growthRate >= 0 ? '+' : ''}${growthRate.toFixed(1)}%`}
+          </Pill>
           <Segmented />
         </div>
       </div>
 
-      <SimpleLineChart />
+      <SimpleLineChart dataPoints={dataPoints} loading={loading} />
     </Card>
   )
 }
