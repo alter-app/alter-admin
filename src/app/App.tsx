@@ -1,24 +1,30 @@
-import { useState } from 'react'
+import { type ReactNode } from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { DashboardPage } from '@/pages/dashboard'
 import { LoginPage } from '@/pages/login'
-import { clearAuthSession, getAuthSession, type AuthSession } from '@/shared/lib/auth'
+import { useAuthStore } from '@/shared/stores/useAuthStore'
 
-export function App() {
-  const [session, setSession] = useState<AuthSession | null>(() => getAuthSession())
-
-  if (!session) {
-    return <LoginPage onLoginSuccess={setSession} />
-  }
-
-  return (
-    <DashboardPage
-      authorizationId={session.authorizationId}
-      accessToken={session.accessToken}
-      onLogout={() => {
-        clearAuthSession()
-        setSession(null)
-      }}
-    />
-  )
+function PrivateRoute({ children }: { children: ReactNode }) {
+  const { isLoggedIn, token } = useAuthStore()
+  if (!isLoggedIn || !token) return <Navigate to="/login" replace />
+  return <>{children}</>
 }
 
+export function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <DashboardPage />
+            </PrivateRoute>
+          }
+        />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}

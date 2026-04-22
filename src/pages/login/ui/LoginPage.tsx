@@ -1,11 +1,28 @@
-import { useState } from 'react'
-import { type AuthSession, type LoginResponse, saveAuthSession } from '@/shared/lib/auth'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { loginIDPW } from '@/shared/api/auth'
+import { useAuthStore } from '@/shared/stores/useAuthStore'
 
-export function LoginPage({ onLoginSuccess }: { onLoginSuccess: (session: AuthSession) => void }) {
+export function LoginPage() {
   const [contact, setContact] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const { isLoggedIn, token } = useAuthStore()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (isLoggedIn && token) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isLoggedIn, token, navigate])
+
+  const formatContact = (value: string) => {
+    const onlyNumber = value.replace(/\D/g, '').slice(0, 11)
+    if (onlyNumber.length < 4) return onlyNumber
+    if (onlyNumber.length < 8) return `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3)}`
+    return `${onlyNumber.slice(0, 3)}-${onlyNumber.slice(3, 7)}-${onlyNumber.slice(7)}`
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -13,26 +30,11 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess: (session: AuthSe
     setSubmitting(true)
 
     try {
-      const response = await fetch('/public/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contact,
-          password,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`로그인 실패: ${response.status}`)
-      }
-
-      const result: LoginResponse = await response.json()
-      saveAuthSession(result.data)
-      onLoginSuccess(result.data)
+      await loginIDPW(contact, password)
+      navigate('/dashboard', { replace: true })
     } catch (error) {
-      setErrorMessage((error as Error).message || '로그인 중 오류가 발생했습니다.')
+      const apiError = error as { message?: string }
+      setErrorMessage(apiError.message || '로그인 중 오류가 발생했습니다.')
     } finally {
       setSubmitting(false)
     }
@@ -48,11 +50,15 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess: (session: AuthSe
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-gray-700">아이디(연락처)</span>
             <input
-              type="text"
+              type="tel"
               value={contact}
-              onChange={(event) => setContact(event.target.value)}
+              onChange={event => {
+                setContact(formatContact(event.target.value))
+                setErrorMessage('')
+              }}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 outline-none focus:border-emerald-500"
-              placeholder="01012345678"
+              placeholder="010-1234-5678"
+              maxLength={13}
               required
             />
           </label>
@@ -62,18 +68,23 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess: (session: AuthSe
             <input
               type="password"
               value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              onChange={event => {
+                setPassword(event.target.value)
+                setErrorMessage('')
+              }}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 outline-none focus:border-emerald-500"
-              placeholder="password123"
+              placeholder="password"
               required
             />
           </label>
 
-          {errorMessage ? <p className="text-sm font-medium text-rose-600">{errorMessage}</p> : null}
+          {errorMessage && (
+            <p className="text-sm font-medium text-rose-600">{errorMessage}</p>
+          )}
 
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !contact.trim() || !password.trim()}
             className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? '로그인 중...' : '로그인'}
@@ -83,4 +94,3 @@ export function LoginPage({ onLoginSuccess }: { onLoginSuccess: (session: AuthSe
     </div>
   )
 }
-
