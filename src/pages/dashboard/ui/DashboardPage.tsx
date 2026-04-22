@@ -37,7 +37,15 @@ type DashboardChartResponse = {
   }
 }
 
-export function DashboardPage() {
+export function DashboardPage({
+  authorizationId,
+  accessToken,
+  onLogout,
+}: {
+  authorizationId: string
+  accessToken: string
+  onLogout: () => void
+}) {
   const [weeklyReportCount, setWeeklyReportCount] = useState(0)
   const [weeklyActiveUserCount, setWeeklyActiveUserCount] = useState(0)
   const [workspaceGrowthRate, setWorkspaceGrowthRate] = useState(0)
@@ -57,13 +65,20 @@ export function DashboardPage() {
           year: String(currentYear),
         })
 
+        const requestHeaders = {
+          authorizationId,
+          Authorization: `Bearer ${accessToken}`,
+        }
+
         const [weeklyResponse, chartResponse] = await Promise.all([
           fetch('/admin/dashboard/weekly-summary', {
             method: 'GET',
+            headers: requestHeaders,
             signal: controller.signal,
           }),
           fetch(`/admin/dashboard/chart?${chartQuery.toString()}`, {
             method: 'GET',
+            headers: requestHeaders,
             signal: controller.signal,
           }),
         ])
@@ -101,7 +116,7 @@ export function DashboardPage() {
     loadDashboardData()
 
     return () => controller.abort()
-  }, [])
+  }, [authorizationId, accessToken])
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -109,7 +124,7 @@ export function DashboardPage() {
         <Sidebar />
 
         <main className="flex min-w-0 flex-1 flex-col">
-          <TopBar />
+          <TopBar onLogout={onLogout} />
 
           <div className="flex-1 px-8 pb-10">
             <div className="grid grid-cols-12 gap-6">

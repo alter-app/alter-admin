@@ -5,7 +5,7 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const proxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:8080'
+  const proxyTarget = env.VITE_API_PROXY_TARGET || env.VITE_API_URL || 'http://localhost:8080'
 
   return {
     plugins: [react()],
@@ -17,6 +17,10 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/admin': {
+          target: proxyTarget,
+          changeOrigin: true,
+        },
+        '/public': {
           target: proxyTarget,
           changeOrigin: true,
         },
