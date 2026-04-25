@@ -64,6 +64,10 @@ type MemberDetailResponse = {
   data: MemberDetail
 }
 
+export async function updateMemberStatus(id: number, status: MemberStatus): Promise<void> {
+  await axiosInstance.put(`/admin/users/${id}/status`, { status })
+}
+
 export async function fetchMemberDetail(id: number, signal?: AbortSignal): Promise<MemberDetail> {
   const { data: result } = await axiosInstance.get<MemberDetailResponse>(`/admin/users/${id}`, { signal })
   return result.data

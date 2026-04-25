@@ -96,6 +96,7 @@ export function MembersTable() {
   const [totalCount, setTotalCount] = useState(0)
   const [isTotalLoaded, setIsTotalLoaded] = useState(false)
   const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
@@ -140,7 +141,7 @@ export function MembersTable() {
       })
 
     return () => controller.abort()
-  }, [page, debouncedSearch, roleFilter, statusFilter])
+  }, [page, debouncedSearch, roleFilter, statusFilter, refreshKey])
 
   const handleRoleFilter = (value: '' | MemberRole) => {
     setRoleFilter(value)
@@ -307,6 +308,7 @@ export function MembersTable() {
         <MemberDetailModal
           memberId={selectedMemberId}
           onClose={() => setSelectedMemberId(null)}
+          onStatusChange={() => setRefreshKey(k => k + 1)}
         />
       )}
     </div>

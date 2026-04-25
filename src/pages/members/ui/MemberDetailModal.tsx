@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchMemberDetail, type MemberDetail, type MemberRole, type MemberStatus } from '../api/members'
+import { fetchMemberDetail, updateMemberStatus, type MemberDetail, type MemberRole, type MemberStatus } from '../api/members'
 
 const ROLE_LABEL: Record<MemberRole, string> = {
   ROLE_USER: '일반회원',
@@ -133,12 +133,15 @@ function ModalContent({ detail }: { detail: MemberDetail }) {
 export function MemberDetailModal({
   memberId,
   onClose,
+  onStatusChange,
 }: {
   memberId: number
   onClose: () => void
+  onStatusChange?: () => void
 }) {
   const [detail, setDetail] = useState<MemberDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -157,6 +160,18 @@ export function MemberDetailModal({
 
     return () => controller.abort()
   }, [memberId])
+
+  const handleStatusChange = async (newStatus: MemberStatus) => {
+    if (updating) return
+    setUpdating(true)
+    try {
+      await updateMemberStatus(memberId, newStatus)
+      setDetail(prev => prev ? { ...prev, status: { ...prev.status, value: newStatus } } : null)
+      onStatusChange?.()
+    } finally {
+      setUpdating(false)
+    }
+  }
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -222,6 +237,35 @@ export function MemberDetailModal({
             </div>
           )}
         </div>
+
+        {/* 모달 푸터 - 상태 변경 */}
+        {!loading && detail && detail.status.value !== 'DELETED' && (
+          <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+            <span className="text-[12px] text-gray-400">상태 변경</span>
+            <div className="flex gap-2">
+              {detail.status.value === 'ACTIVE' && (
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={() => handleStatusChange('SUSPENDED')}
+                  className="rounded-xl border border-red-200 px-4 py-2 text-[12px] font-semibold text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {updating ? '처리 중...' : '정지'}
+                </button>
+              )}
+              {detail.status.value === 'SUSPENDED' && (
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={() => handleStatusChange('ACTIVE')}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-[12px] font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {updating ? '처리 중...' : '활성화'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
