@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchMemberDetail, updateMemberStatus, type MemberDetail, type MemberRole, type MemberStatus } from '../api/members'
+import { fetchMemberDetail, updateMemberStatus, updateMemberPassword, type MemberDetail, type MemberRole, type MemberStatus } from '../api/members'
 
 const ROLE_LABEL: Record<MemberRole, string> = {
   ROLE_USER: '일반회원',
@@ -142,6 +142,10 @@ export function MemberDetailModal({
   const [detail, setDetail] = useState<MemberDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [passwordUpdating, setPasswordUpdating] = useState(false)
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -170,6 +174,19 @@ export function MemberDetailModal({
       onStatusChange?.()
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    if (!newPassword.trim() || passwordUpdating) return
+    setPasswordUpdating(true)
+    try {
+      await updateMemberPassword(memberId, newPassword)
+      setNewPassword('')
+      setPasswordSuccess(true)
+      setTimeout(() => setPasswordSuccess(false), 2500)
+    } finally {
+      setPasswordUpdating(false)
     }
   }
 
@@ -230,13 +247,69 @@ export function MemberDetailModal({
         </div>
 
         {/* 모달 바디 */}
-        <div className="max-h-[60vh] overflow-y-auto">
-          {loading ? <SkeletonBody /> : detail ? <ModalContent detail={detail} /> : (
+        <div className="max-h-[40vh] overflow-y-auto">
+          {loading ? <SkeletonBody /> : detail ? (
+            <ModalContent detail={detail} />
+          ) : (
             <div className="py-16 text-center text-[13px] text-gray-400">
               데이터를 불러오지 못했습니다
             </div>
           )}
         </div>
+
+        {/* 비밀번호 변경 (항상 보임) */}
+        {!loading && detail && (
+          <div className="border-t border-gray-100 px-6 py-4">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              비밀번호 변경
+            </div>
+            <div className="flex h-10 items-center rounded-xl border border-gray-200 bg-gray-50 focus-within:border-emerald-300 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="새 비밀번호 입력"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handlePasswordChange()}
+                className="h-full flex-1 bg-transparent px-4 text-[13px] outline-none placeholder:text-gray-400"
+              />
+              <button
+                type="button"
+                onMouseDown={e => e.preventDefault()}
+                onClick={e => { e.stopPropagation(); setShowPassword(v => !v) }}
+                className="px-2 text-gray-400 hover:text-gray-600"
+                aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+              >
+                {showPassword ? (
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10.73 10.73a3 3 0 0 0 4.24 4.24" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="m1 1 22 22" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.8"/>
+                  </svg>
+                )}
+              </button>
+              <div className="h-4 w-px bg-gray-200" />
+              <button
+                type="button"
+                disabled={passwordUpdating}
+                onClick={handlePasswordChange}
+                className="rounded-r-xl px-4 text-[12px] font-semibold text-gray-700 hover:text-gray-900 disabled:cursor-not-allowed"
+              >
+                {passwordUpdating ? '변경 중' : '변경'}
+              </button>
+            </div>
+            {passwordSuccess && (
+              <p className="mt-2 text-[12px] font-medium text-emerald-600">
+                비밀번호가 변경됐습니다.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* 모달 푸터 - 상태 변경 */}
         {!loading && detail && detail.status.value !== 'DELETED' && (
