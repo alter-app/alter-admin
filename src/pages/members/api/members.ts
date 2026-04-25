@@ -35,6 +35,40 @@ type FetchMembersParams = {
   signal?: AbortSignal
 }
 
+type GenderValue = 'GENDER_MALE' | 'GENDER_FEMALE'
+
+type ReputationKeyword = {
+  id: string
+  emoji: string
+  description: string
+  count: number
+}
+
+export type MemberDetail = {
+  id: number
+  email: string
+  name: string
+  nickname: string
+  contact: string
+  birthday: string
+  gender: { value: GenderValue; description: string }
+  role: { value: MemberRole; description: string }
+  status: { value: MemberStatus; description: string }
+  createdAt: string
+  updatedAt: string
+  reputationSummary: { topKeywords: ReputationKeyword[] } | null
+}
+
+type MemberDetailResponse = {
+  timestamp: string
+  data: MemberDetail
+}
+
+export async function fetchMemberDetail(id: number, signal?: AbortSignal): Promise<MemberDetail> {
+  const { data: result } = await axiosInstance.get<MemberDetailResponse>(`/admin/users/${id}`, { signal })
+  return result.data
+}
+
 export async function fetchMembers(params: FetchMembersParams): Promise<MembersResponse> {
   const query = new URLSearchParams({
     page: String(params.page),

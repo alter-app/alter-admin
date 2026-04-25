@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchMembers, type Member, type MemberRole, type MemberStatus } from '../api/members'
+import { MemberDetailModal } from './MemberDetailModal'
 
 const PAGE_SIZE = 10
 
@@ -94,6 +95,7 @@ export function MembersTable() {
 
   const [totalCount, setTotalCount] = useState(0)
   const [isTotalLoaded, setIsTotalLoaded] = useState(false)
+  const [selectedMemberId, setSelectedMemberId] = useState<number | null>(null)
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
@@ -243,6 +245,7 @@ export function MembersTable() {
                     <td className="py-4 pl-3 pr-6">
                       <button
                         type="button"
+                        onClick={() => setSelectedMemberId(member.id)}
                         className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-gray-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
                       >
                         상세보기
@@ -299,6 +302,13 @@ export function MembersTable() {
           )}
         </div>
       </div>
+
+      {selectedMemberId !== null && (
+        <MemberDetailModal
+          memberId={selectedMemberId}
+          onClose={() => setSelectedMemberId(null)}
+        />
+      )}
     </div>
   )
 }
