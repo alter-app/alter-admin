@@ -1,9 +1,9 @@
 import { Icon } from './components/Icon'
 
-export function TopBar({ onLogout }: { onLogout: () => void }) {
+export function TopBar({ onLogout, title = '홈' }: { onLogout: () => void; title?: string }) {
   return (
     <header className="flex h-16 items-center justify-between px-8">
-      <div className="text-[18px] font-semibold text-emerald-800">홈</div>
+      <div className="text-[18px] font-semibold text-emerald-800">{title}</div>
 
       <div className="flex items-center gap-3">
         <button
