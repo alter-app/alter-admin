@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   fetchReportDetail,
   updateReportStatus,
+  deleteReport,
   type ReportDetail,
   type ReportTargetType,
   type ReportStatus,
@@ -136,6 +137,8 @@ export function ReportDetailModal({
   const [loading, setLoading] = useState(true)
   const [adminComment, setAdminComment] = useState('')
   const [updating, setUpdating] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -173,6 +176,18 @@ export function ReportDetailModal({
       onStatusChange?.()
     } finally {
       setUpdating(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (deleting) return
+    setDeleting(true)
+    try {
+      await deleteReport(reportId)
+      onStatusChange?.()
+      onClose()
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -287,13 +302,47 @@ export function ReportDetailModal({
               </>
             )}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-gray-200 px-5 py-2 text-[13px] font-semibold text-gray-600 hover:bg-gray-50"
-          >
-            닫기
-          </button>
+          <div className="flex items-center gap-2">
+            {!loading && detail && (
+              confirmDelete ? (
+                <>
+                  <span className="text-[12px] text-gray-500">정말 삭제할까요?</span>
+                  <button
+                    type="button"
+                    disabled={deleting}
+                    onClick={handleDelete}
+                    className="rounded-xl bg-red-500 px-4 py-2 text-[12px] font-semibold text-white hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {deleting ? '삭제 중...' : '확인'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-xl border border-gray-200 px-4 py-2 text-[12px] font-semibold text-gray-600 hover:bg-gray-50"
+                  >
+                    취소
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="rounded-xl border border-red-200 px-4 py-2 text-[12px] font-semibold text-red-500 hover:bg-red-50"
+                >
+                  삭제
+                </button>
+              )
+            )}
+            {!confirmDelete && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-xl border border-gray-200 px-5 py-2 text-[13px] font-semibold text-gray-600 hover:bg-gray-50"
+              >
+                닫기
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

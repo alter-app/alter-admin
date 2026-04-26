@@ -66,3 +66,7 @@ export async function updateReportStatus(
 ): Promise<void> {
   await axiosInstance.put(`/admin/reports/${reportId}/status`, { status, adminComment })
 }
+
+export async function deleteReport(reportId: number): Promise<void> {
+  await axiosInstance.delete(`/admin/reports/${reportId}`)
+}
