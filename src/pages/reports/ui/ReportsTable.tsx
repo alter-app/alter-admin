@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchReports, type Report, type ReportTargetType, type ReportStatus } from '../api/reports'
+import { ReportDetailModal } from './ReportDetailModal'
 
 const PAGE_SIZE = 10
 
@@ -76,6 +77,7 @@ export function ReportsTable() {
 
   const [targetTypeFilter, setTargetTypeFilter] = useState<'' | ReportTargetType>('')
   const [statusFilter, setStatusFilter] = useState<'' | ReportStatus>('')
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null)
 
   const resetPagination = () => {
     setCursorStack([null])
@@ -138,6 +140,12 @@ export function ReportsTable() {
 
   return (
     <div>
+      {selectedReportId !== null && (
+        <ReportDetailModal
+          reportId={selectedReportId}
+          onClose={() => setSelectedReportId(null)}
+        />
+      )}
       {/* 통계 카드 */}
       <div className="mb-6">
         <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
@@ -226,6 +234,7 @@ export function ReportsTable() {
                     <td className="py-4 pl-3 pr-6">
                       <button
                         type="button"
+                        onClick={() => setSelectedReportId(report.id)}
                         className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-gray-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700"
                       >
                         상세보기
