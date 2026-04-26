@@ -58,3 +58,11 @@ export async function fetchReportDetail(reportId: number, signal?: AbortSignal):
   const { data } = await axiosInstance.get<{ data: ReportDetail }>(`/admin/reports/${reportId}`, { signal })
   return data.data
 }
+
+export async function updateReportStatus(
+  reportId: number,
+  status: ReportStatus,
+  adminComment: string,
+): Promise<void> {
+  await axiosInstance.put(`/admin/reports/${reportId}/status`, { status, adminComment })
+}

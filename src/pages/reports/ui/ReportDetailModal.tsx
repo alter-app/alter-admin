@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { fetchReportDetail, type ReportDetail, type ReportTargetType, type ReportStatus } from '../api/reports'
+import {
+  fetchReportDetail,
+  updateReportStatus,
+  type ReportDetail,
+  type ReportTargetType,
+  type ReportStatus,
+} from '../api/reports'
 
 const TARGET_TYPE_LABEL: Record<ReportTargetType, string> = {
   USER:       '회원',
@@ -84,14 +90,16 @@ function SkeletonBody() {
 
 const formatDate = (iso: string) => iso.slice(0, 10).replace(/-/g, '.')
 
+const TERMINAL_STATUSES: ReportStatus[] = ['RESOLVED', 'REJECTED', 'CANCELLED', 'DELETED']
+
 function ModalContent({ detail }: { detail: ReportDetail }) {
   return (
     <div className="space-y-6 p-6">
       <div>
         <SectionTitle>신고 정보</SectionTitle>
         <dl>
-          <InfoRow label="신고 대상"  value={detail.target.targetName} />
-          <InfoRow label="신고 사유"  value={detail.reason} />
+          <InfoRow label="신고 대상" value={detail.target.targetName} />
+          <InfoRow label="신고 사유" value={detail.reason} />
         </dl>
       </div>
 
@@ -118,12 +126,16 @@ function ModalContent({ detail }: { detail: ReportDetail }) {
 export function ReportDetailModal({
   reportId,
   onClose,
+  onStatusChange,
 }: {
   reportId: number
   onClose: () => void
+  onStatusChange?: () => void
 }) {
   const [detail, setDetail] = useState<ReportDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [adminComment, setAdminComment] = useState('')
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -133,6 +145,7 @@ export function ReportDetailModal({
     fetchReportDetail(reportId, controller.signal)
       .then(data => {
         setDetail(data)
+        setAdminComment(data.adminComment ?? '')
         setLoading(false)
       })
       .catch(err => {
@@ -151,6 +164,20 @@ export function ReportDetailModal({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
+  const handleStatusChange = async (newStatus: ReportStatus) => {
+    if (updating) return
+    setUpdating(true)
+    try {
+      await updateReportStatus(reportId, newStatus, adminComment)
+      setDetail(prev => prev ? { ...prev, status: newStatus, adminComment: adminComment || null } : null)
+      onStatusChange?.()
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const canChangeStatus = detail && !TERMINAL_STATUSES.includes(detail.status)
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
@@ -165,9 +192,7 @@ export function ReportDetailModal({
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-amber-50 text-[20px] font-bold text-amber-600">
             {loading ? (
               <div className="h-7 w-7 animate-pulse rounded-full bg-amber-100" />
-            ) : (
-              '!'
-            )}
+            ) : '!'}
           </div>
 
           <div className="flex-1">
@@ -202,7 +227,7 @@ export function ReportDetailModal({
         </div>
 
         {/* 바디 */}
-        <div className="max-h-[50vh] overflow-y-auto">
+        <div className="max-h-[40vh] overflow-y-auto">
           {loading ? <SkeletonBody /> : detail ? (
             <ModalContent detail={detail} />
           ) : (
@@ -212,8 +237,56 @@ export function ReportDetailModal({
           )}
         </div>
 
+        {/* 상태 변경 섹션 */}
+        {!loading && canChangeStatus && (
+          <div className="border-t border-gray-100 px-6 py-4">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              관리자 코멘트
+            </div>
+            <textarea
+              value={adminComment}
+              onChange={e => setAdminComment(e.target.value)}
+              placeholder="코멘트를 입력하세요 (선택)"
+              rows={2}
+              className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-[13px] text-gray-900 outline-none placeholder:text-gray-400 focus:border-emerald-300 focus:bg-white focus:ring-2 focus:ring-emerald-100"
+            />
+          </div>
+        )}
+
         {/* 푸터 */}
-        <div className="flex items-center justify-end border-t border-gray-100 px-6 py-4">
+        <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+          <div className="flex gap-2">
+            {!loading && canChangeStatus && detail && (
+              <>
+                {detail.status === 'PENDING' && (
+                  <button
+                    type="button"
+                    disabled={updating}
+                    onClick={() => handleStatusChange('PROCESSING')}
+                    className="rounded-xl bg-blue-600 px-4 py-2 text-[12px] font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {updating ? '처리 중...' : '처리중'}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={() => handleStatusChange('RESOLVED')}
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-[12px] font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {updating ? '처리 중...' : '해결됨'}
+                </button>
+                <button
+                  type="button"
+                  disabled={updating}
+                  onClick={() => handleStatusChange('REJECTED')}
+                  className="rounded-xl border border-red-200 px-4 py-2 text-[12px] font-semibold text-red-500 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {updating ? '처리 중...' : '거절됨'}
+                </button>
+              </>
+            )}
+          </div>
           <button
             type="button"
             onClick={onClose}

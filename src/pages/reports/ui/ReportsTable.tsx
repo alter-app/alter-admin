@@ -78,6 +78,7 @@ export function ReportsTable() {
   const [targetTypeFilter, setTargetTypeFilter] = useState<'' | ReportTargetType>('')
   const [statusFilter, setStatusFilter] = useState<'' | ReportStatus>('')
   const [selectedReportId, setSelectedReportId] = useState<number | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const resetPagination = () => {
     setCursorStack([null])
@@ -132,7 +133,7 @@ export function ReportsTable() {
       })
 
     return () => controller.abort()
-  }, [pageIdx, cursorStack, targetTypeFilter, statusFilter])
+  }, [pageIdx, cursorStack, targetTypeFilter, statusFilter, refreshKey])
 
   const formatDate = (iso: string) => iso.slice(0, 10).replace(/-/g, '.')
   const hasPrev = pageIdx > 0
@@ -144,6 +145,7 @@ export function ReportsTable() {
         <ReportDetailModal
           reportId={selectedReportId}
           onClose={() => setSelectedReportId(null)}
+          onStatusChange={() => { isTotalLoadedRef.current = false; setRefreshKey(k => k + 1) }}
         />
       )}
       {/* 통계 카드 */}
