@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { DashboardPage } from '@/pages/dashboard'
 import { LoginPage } from '@/pages/login'
 import { MembersPage } from '@/pages/members'
+import { ReportsPage } from '@/pages/reports'
 import { useAuthStore } from '@/shared/stores/useAuthStore'
 
 function PrivateRoute({ children }: { children: ReactNode }) {
@@ -29,6 +30,14 @@ export function App() {
           element={
             <PrivateRoute>
               <MembersPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <PrivateRoute>
+              <ReportsPage />
             </PrivateRoute>
           }
         />
