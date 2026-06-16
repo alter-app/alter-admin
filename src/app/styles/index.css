@@ -2,11 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'RixYeoljeongdo_Pro';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2102-01@1.0/RixYeoljeongdo_Regular.woff')
+    format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -17,7 +23,116 @@
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
+    font-family:
+      'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+      'Apple SD Gothic Neo', system-ui, sans-serif;
+    color: #232323;
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+    background: #f4f4f4;
   }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: #07c079 !important;
+  }
+
+  ::placeholder {
+    color: #a3a3a3;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #d6d6d6;
+    border-radius: 8px;
+    border: 2px solid #f4f4f4;
+  }
+}
+
+/* ===== Admin animations ===== */
+@keyframes ovFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ovPop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes ddIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ===== Admin hover idioms (ported from the design's style-hover) ===== */
+.adm-hover-f4:hover {
+  background: #f4f4f4 !important;
+}
+.adm-hover-f8:hover {
+  background: #f8f8f8 !important;
+}
+.adm-hover-red:hover {
+  background: #fdeaea !important;
+}
+.adm-hover-bright:hover {
+  filter: brightness(0.93);
+}
+.adm-hover-bright-soft:hover {
+  filter: brightness(0.97);
+}
+.adm-hover-bright-098:hover {
+  filter: brightness(0.98);
+}
+.adm-btn-primary:hover {
+  filter: brightness(0.93);
+  transform: translateY(-1px);
+}
+.adm-nav-hover:hover {
+  background: #f4f4f4 !important;
+}
+.adm-row:hover {
+  background: #f9fdfb;
+}
+.adm-back:hover {
+  color: #07c079 !important;
+}
+.adm-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.07);
+  border-color: #d8d8d8 !important;
+}
+.adm-card-amber:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(232, 146, 11, 0.14);
+}
+.adm-card-white:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+.adm-more:hover {
+  background: #f4f4f4;
+  border-color: #07c079 !important;
+  color: #07c079 !important;
 }
 
 @layer utilities {
