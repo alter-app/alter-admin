@@ -1,6 +1,7 @@
 import { buildChart } from '@/shared/admin/data'
 import type { Metric, Period } from '@/shared/admin/data'
 import { useAdminStore } from '@/shared/stores/useAdminStore'
+import { useDashboardChart, useWeeklySummary } from '@/features/dashboard/hooks/useDashboard'
 
 const RIX = "'RixYeoljeongdo_Pro'"
 
@@ -55,6 +56,12 @@ function SegGroup({ items }: { items: Seg[] }) {
   )
 }
 
+const PERIOD_MAP: Record<string, string> = {
+  weekly: 'WEEKLY',
+  monthly: 'MONTHLY',
+  yearly: 'YEARLY',
+}
+
 export function DashboardView() {
   const chartMetric = useAdminStore(s => s.chartMetric)
   const period = useAdminStore(s => s.period)
@@ -62,20 +69,73 @@ export function DashboardView() {
   const setPeriod = useAdminStore(s => s.setPeriod)
   const selectMenu = useAdminStore(s => s.selectMenu)
 
-  const chart = buildChart(chartMetric, period)
+  const currentYear = new Date().getFullYear()
+  const { data: chartData } = useDashboardChart(PERIOD_MAP[period], currentYear)
+  const { data: weekly } = useWeeklySummary()
+
+  // Build chart geometry from API data or fall back to mock
+  const apiSeries = chartData
+    ? (chartMetric === 'members' ? chartData.memberChart : chartData.workspaceChart)
+    : null
+  const chart = buildChart(chartMetric, period, apiSeries ?? undefined)
+
+  const totalMembers = apiSeries && chartMetric === 'members'
+    ? (chartData?.memberChart.dataPoints.slice(-1)[0]?.value ?? 0)
+    : null
+  const totalWorkspaces = apiSeries && chartMetric === 'workspaces'
+    ? (chartData?.workspaceChart.dataPoints.slice(-1)[0]?.value ?? 0)
+    : null
+
+  const yoy = apiSeries
+    ? `${apiSeries.yearOverYearGrowthRate > 0 ? '+' : ''}${(apiSeries.yearOverYearGrowthRate * 100).toFixed(1)}%`
+    : chart.yoy
 
   const kpis = [
-    { label: '총 회원 수', value: '12,480', unit: '명', dot: '#07c079', delta: '▲ 8.2%', deltaNote: '전월 대비', deltaColor: '#07c079', on: () => selectMenu('members') },
-    { label: '등록 업장 수', value: '1,340', unit: '개', dot: '#003BDC', delta: '▲ 5.1%', deltaNote: '전월 대비', deltaColor: '#07c079', on: () => selectMenu('workspaces') },
-    { label: '오늘의 신고', value: '12', unit: '건', dot: '#e8920b', delta: '▲ 3건', deltaNote: '어제 대비', deltaColor: '#e8920b', on: () => selectMenu('reports') },
-    { label: '이번 달 신고', value: '248', unit: '건', dot: '#dc0000', delta: '▼ 6.4%', deltaNote: '전월 대비', deltaColor: '#dc0000', on: () => selectMenu('reports') },
+    {
+      label: '총 회원 수',
+      value: totalMembers !== null ? totalMembers.toLocaleString() : '—',
+      unit: '명',
+      dot: '#07c079',
+      delta: chartData ? `▲ ${(chartData.memberChart.yearOverYearGrowthRate * 100).toFixed(1)}%` : '—',
+      deltaNote: '전년 대비',
+      deltaColor: '#07c079',
+      on: () => selectMenu('members'),
+    },
+    {
+      label: '등록 업장 수',
+      value: totalWorkspaces !== null ? totalWorkspaces.toLocaleString() : '—',
+      unit: '개',
+      dot: '#003BDC',
+      delta: chartData ? `▲ ${(chartData.workspaceChart.yearOverYearGrowthRate * 100).toFixed(1)}%` : '—',
+      deltaNote: '전년 대비',
+      deltaColor: '#07c079',
+      on: () => selectMenu('workspaces'),
+    },
+    {
+      label: '주간 신고 접수',
+      value: weekly ? weekly.weeklyReportCount.toLocaleString() : '—',
+      unit: '건',
+      dot: '#e8920b',
+      delta: '',
+      deltaNote: '이번 주',
+      deltaColor: '#e8920b',
+      on: () => selectMenu('reports'),
+    },
+    {
+      label: '신규 매니저',
+      value: weekly ? weekly.weeklyNewWorkerCount.toLocaleString() : '—',
+      unit: '명',
+      dot: '#dc0000',
+      delta: '',
+      deltaNote: '이번 주',
+      deltaColor: '#828282',
+      on: () => selectMenu('members'),
+    },
   ]
 
   const metricItems: Seg[] = [
     seg(chartMetric === 'members', '회원', () => setMetric('members' as Metric)),
-    seg(chartMetric === 'workspaces', '업장', () =>
-      setMetric('workspaces' as Metric)
-    ),
+    seg(chartMetric === 'workspaces', '업장', () => setMetric('workspaces' as Metric)),
   ]
   const periodItems: Seg[] = [
     seg(period === 'weekly', '주간', () => setPeriod('weekly' as Period)),
@@ -94,7 +154,7 @@ export function DashboardView() {
         }}
       >
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>대시보드</h1>
-        <span style={{ fontSize: 13, color: '#a3a3a3' }}>기준일 2026.06.16</span>
+        <span style={{ fontSize: 13, color: '#a3a3a3' }}>기준 연도 {currentYear}</span>
       </div>
 
       <div
@@ -161,19 +221,26 @@ export function DashboardView() {
               </span>
               <span style={{ fontSize: 14, color: '#828282' }}>{k.unit}</span>
             </div>
-            <div
-              style={{
-                marginTop: 10,
-                fontSize: 13,
-                fontWeight: 600,
-                color: k.deltaColor,
-              }}
-            >
-              {k.delta}{' '}
-              <span style={{ color: '#a3a3a3', fontWeight: 400 }}>
+            {k.delta && (
+              <div
+                style={{
+                  marginTop: 10,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: k.deltaColor,
+                }}
+              >
+                {k.delta}{' '}
+                <span style={{ color: '#a3a3a3', fontWeight: 400 }}>
+                  {k.deltaNote}
+                </span>
+              </div>
+            )}
+            {!k.delta && (
+              <div style={{ marginTop: 10, fontSize: 13, color: '#a3a3a3' }}>
                 {k.deltaNote}
-              </span>
-            </div>
+              </div>
+            )}
           </button>
         ))}
       </div>
@@ -210,7 +277,7 @@ export function DashboardView() {
               <p style={{ margin: '5px 0 0', fontSize: 13, color: '#828282' }}>
                 전년 대비{' '}
                 <span style={{ color: '#07c079', fontWeight: 600 }}>
-                  {chart.yoy}
+                  {yoy}
                 </span>{' '}
                 증가
               </p>
@@ -308,7 +375,7 @@ export function DashboardView() {
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 600, color: '#b9740a' }}>
-                오늘의 신고
+                주간 신고 접수
               </div>
               <div
                 style={{
@@ -318,7 +385,7 @@ export function DashboardView() {
                   color: '#232323',
                 }}
               >
-                12
+                {weekly?.weeklyReportCount ?? '—'}
                 <span
                   style={{
                     fontSize: 14,
@@ -331,12 +398,12 @@ export function DashboardView() {
                 </span>
               </div>
               <div style={{ marginTop: 6, fontSize: 12, color: '#e8920b' }}>
-                미처리 5건 →
+                신고 관리 →
               </div>
             </button>
             <button
               type="button"
-              onClick={() => selectMenu('reports')}
+              onClick={() => selectMenu('members')}
               className="adm-card-white"
               style={{
                 textAlign: 'left',
@@ -348,7 +415,7 @@ export function DashboardView() {
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 600, color: '#828282' }}>
-                이번 달 신고
+                신규 매니저
               </div>
               <div
                 style={{
@@ -358,7 +425,7 @@ export function DashboardView() {
                   color: '#232323',
                 }}
               >
-                248
+                {weekly?.weeklyNewWorkerCount ?? '—'}
                 <span
                   style={{
                     fontSize: 14,
@@ -367,11 +434,11 @@ export function DashboardView() {
                   }}
                 >
                   {' '}
-                  건
+                  명
                 </span>
               </div>
-              <div style={{ marginTop: 6, fontSize: 12, color: '#dc0000' }}>
-                ▾ 6.4% 전월 대비
+              <div style={{ marginTop: 6, fontSize: 12, color: '#828282' }}>
+                이번 주
               </div>
             </button>
           </div>
@@ -394,15 +461,16 @@ export function DashboardView() {
               주간 요약
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <SummaryRow label="신규 가입 매니저" value="+ 34" unit="명" />
-              <div style={{ height: 1, background: '#f4f4f4' }} />
-              <SummaryRow label="주간 신고 접수" value="61" unit="건" />
+              <SummaryRow
+                label="신규 매니저"
+                value={weekly ? `+ ${weekly.weeklyNewWorkerCount}` : '—'}
+                unit="명"
+              />
               <div style={{ height: 1, background: '#f4f4f4' }} />
               <SummaryRow
-                label="업장 등록 대기"
-                value="8"
+                label="주간 신고 접수"
+                value={weekly ? String(weekly.weeklyReportCount) : '—'}
                 unit="건"
-                valueColor="#e8920b"
               />
             </div>
           </div>

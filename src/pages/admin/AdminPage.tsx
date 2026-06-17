@@ -7,10 +7,14 @@ import { DashboardView } from './views/DashboardView'
 import { JobDetailView } from './views/JobDetailView'
 import { ListView } from './views/ListView'
 import { MemberDetailView } from './views/MemberDetailView'
+import { MembersListView } from './views/MembersListView'
 import { ReportDetailView } from './views/ReportDetailView'
+import { ReportsListView } from './views/ReportsListView'
 import { SystemSettingsView } from './views/SystemSettingsView'
+import { TermsListView } from './views/TermsListView'
 import { WsManageDetailView } from './views/WsManageDetailView'
 import { WsRequestDetailView } from './views/WsRequestDetailView'
+import { WsRequestsListView } from './views/WsRequestsListView'
 
 function MainContent() {
   const menu = useAdminStore(s => s.menu)
@@ -20,6 +24,7 @@ function MainContent() {
   const openConfirm = useAdminStore(s => s.openConfirm)
   const selectWorkspaceSub = useAdminStore(s => s.selectWorkspaceSub)
 
+  // Detail views
   if (detail) {
     switch (detail.type) {
       case 'member':
@@ -35,9 +40,17 @@ function MainContent() {
     }
   }
 
+  // Dashboard & system (no list)
   if (menu === 'dashboard') return <DashboardView />
   if (menu === 'system') return <SystemSettingsView />
 
+  // API-connected list views
+  if (menu === 'members') return <MembersListView />
+  if (menu === 'reports') return <ReportsListView />
+  if (menu === 'terms') return <TermsListView />
+  if (menu === 'workspaces' && workspaceSub === 'requests') return <WsRequestsListView />
+
+  // Mock-only (no backend API): jobs, workspaces/manage
   const config = buildListConfig(menu, workspaceSub, {
     openDetail,
     openConfirm,

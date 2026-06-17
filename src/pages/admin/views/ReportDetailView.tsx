@@ -1,19 +1,49 @@
+import { useState } from 'react'
 import { badge } from '@/shared/admin/data'
-import type { Report, Tone } from '@/shared/admin/data'
+import type { Report } from '@/shared/admin/data'
+import { reportStatusTone } from '@/shared/admin/enums'
+import { useReport, useUpdateReportStatus, useDeleteReport } from '@/features/reports/hooks/useReports'
 import { useAdminStore } from '@/shared/stores/useAdminStore'
 import { Badge } from '@/shared/ui/Badge'
 import { BackButton } from './detailParts'
+import type { UpdateReportStatusRequest } from '@/features/reports/types'
 
-const STATUS_OPTIONS: [string, Tone][] = [
-  ['대기중', 'amber'],
-  ['처리중', 'amber'],
-  ['완료', 'green'],
-  ['거부됨', 'red'],
+const STATUS_OPTIONS: { label: string; value: UpdateReportStatusRequest['status'] }[] = [
+  { label: '대기중', value: 'PENDING' },
+  { label: '처리중', value: 'PROCESSING' },
+  { label: '완료', value: 'RESOLVED' },
+  { label: '거부됨', value: 'REJECTED' },
 ]
 
 export function ReportDetailView({ report }: { report: Report }) {
   const openConfirm = useAdminStore(s => s.openConfirm)
-  const b = badge(report.tone)
+  const back = useAdminStore(s => s.back)
+  const [adminComment, setAdminComment] = useState(report.adminComment)
+
+  const { data: detail } = useReport(report.id)
+  const updateStatus = useUpdateReportStatus(report.id)
+  const deleteReport = useDeleteReport(report.id)
+
+  const targetType = detail?.targetType.description ?? report.targetType
+  const targetName = detail?.target.targetName ?? report.targetName
+  const statusLabel = detail?.status.description ?? report.status
+  const statusTone = detail ? reportStatusTone(detail.status.value) : report.tone
+  const reason = detail?.reason ?? report.reason
+  const savedComment = detail?.adminComment ?? report.adminComment
+  const createdAt = detail?.createdAt ?? report.createdAt
+  const updatedAt = detail?.updatedAt ?? report.updatedAt
+
+  const b = badge(statusTone)
+
+  function handleStatusChange(label: string, value: UpdateReportStatusRequest['status']) {
+    openConfirm({
+      title: '상태 변경',
+      desc: `신고 상태를 "${label}"(으)로 변경할까요?`,
+      label: '변경',
+      color: '#07c079',
+      onConfirm: () => updateStatus.mutate({ status: value, adminComment }),
+    })
+  }
 
   return (
     <>
@@ -42,22 +72,15 @@ export function ReportDetailView({ report }: { report: Report }) {
               marginBottom: 20,
             }}
           >
-            <Badge text={report.targetType} bg="#e9eefc" fg="#003BDC" />
+            <Badge text={targetType} bg="#e9eefc" fg="#003BDC" />
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
-              {report.targetName}
+              {targetName}
             </h2>
-            <Badge text={report.status} bg={b.bg} fg={b.fg} />
+            <Badge text={statusLabel} bg={b.bg} fg={b.fg} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: '#a3a3a3',
-                  fontWeight: 600,
-                  marginBottom: 6,
-                }}
-              >
+              <div style={{ fontSize: 12, color: '#a3a3a3', fontWeight: 600, marginBottom: 6 }}>
                 신고 사유
               </div>
               <div
@@ -70,23 +93,17 @@ export function ReportDetailView({ report }: { report: Report }) {
                   lineHeight: 1.6,
                 }}
               >
-                {report.reason}
+                {reason}
               </div>
             </div>
             <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: '#a3a3a3',
-                  fontWeight: 600,
-                  marginBottom: 6,
-                }}
-              >
+              <div style={{ fontSize: 12, color: '#a3a3a3', fontWeight: 600, marginBottom: 6 }}>
                 관리자 코멘트
               </div>
               <textarea
                 placeholder="처리 코멘트를 입력하세요"
-                defaultValue={report.adminComment}
+                value={adminComment || savedComment}
+                onChange={e => setAdminComment(e.target.value)}
                 style={{
                   width: '100%',
                   minHeight: 96,
@@ -100,16 +117,9 @@ export function ReportDetailView({ report }: { report: Report }) {
                 }}
               />
             </div>
-            <div
-              style={{
-                display: 'flex',
-                gap: 18,
-                fontSize: 13,
-                color: '#a3a3a3',
-              }}
-            >
-              <span>신고일 {report.createdAt}</span>
-              <span>최종 수정 {report.updatedAt}</span>
+            <div style={{ display: 'flex', gap: 18, fontSize: 13, color: '#a3a3a3' }}>
+              <span>신고일 {createdAt}</span>
+              <span>최종 수정 {updatedAt}</span>
             </div>
           </div>
         </section>
@@ -127,29 +137,16 @@ export function ReportDetailView({ report }: { report: Report }) {
           <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 600 }}>
             처리 상태
           </h3>
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              marginBottom: 18,
-            }}
-          >
-            {STATUS_OPTIONS.map(([label, tone]) => {
-              const active = label === report.status
-              const bd = badge(tone)
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 18 }}>
+            {STATUS_OPTIONS.map(({ label, value }) => {
+              const active = label === statusLabel
+              const bd = badge(reportStatusTone(value))
               return (
                 <button
-                  key={label}
+                  key={value}
                   type="button"
-                  onClick={() =>
-                    openConfirm({
-                      title: '상태 변경',
-                      desc: `신고 상태를 "${label}"(으)로 변경할까요?`,
-                      label: '변경',
-                      color: '#07c079',
-                    })
-                  }
+                  onClick={() => handleStatusChange(label, value)}
+                  disabled={updateStatus.isPending}
                   className="adm-hover-bright-098"
                   style={{
                     height: 42,
@@ -174,38 +171,14 @@ export function ReportDetailView({ report }: { report: Report }) {
             type="button"
             onClick={() =>
               openConfirm({
-                title: '계정 제재',
-                desc: '피신고자 계정을 정지 처리합니다. 계속할까요?',
-                label: '제재',
-                color: '#dc0000',
-              })
-            }
-            className="adm-hover-bright-soft"
-            style={{
-              width: '100%',
-              height: 44,
-              border: '1px solid #f3e2c4',
-              borderRadius: 12,
-              background: '#fdf3e2',
-              color: '#b9740a',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              marginBottom: 8,
-            }}
-          >
-            피신고자 계정 제재
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              openConfirm({
                 title: '신고 삭제',
                 desc: '신고 내역을 삭제할까요?',
                 label: '삭제',
                 color: '#dc0000',
+                onConfirm: () => deleteReport.mutate(undefined, { onSuccess: () => back() }),
               })
             }
+            disabled={deleteReport.isPending}
             className="adm-hover-red"
             style={{
               width: '100%',

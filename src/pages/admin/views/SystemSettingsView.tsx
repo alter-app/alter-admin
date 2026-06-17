@@ -19,8 +19,11 @@ const sectionTitle = { margin: '0 0 16px', fontSize: 16, fontWeight: 600 } as co
 export function SystemSettingsView() {
   return (
     <>
-      <div style={{ marginBottom: 18 }}>
+      <div style={{ marginBottom: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
         <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>시스템 관리</h1>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#828282', background: '#efefef', borderRadius: 6, padding: '3px 8px' }}>
+          미연동 · 예시
+        </span>
       </div>
       <div
         style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}

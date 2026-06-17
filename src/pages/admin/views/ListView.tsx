@@ -52,7 +52,15 @@ function CellContent({ cell }: { cell: Cell }) {
   return <>{cell.text}</>
 }
 
-export function ListView({ config }: { config: ListConfig }) {
+interface ListViewProps {
+  config: ListConfig
+  currentPage?: number
+  totalPage?: number
+  onPageChange?: (page: number) => void
+  isLoading?: boolean
+}
+
+export function ListView({ config, currentPage = 1, totalPage, onPageChange, isLoading }: ListViewProps) {
   return (
     <>
       <div
@@ -63,9 +71,16 @@ export function ListView({ config }: { config: ListConfig }) {
           marginBottom: 18,
         }}
       >
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>
-          {config.title}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>
+            {config.title}
+          </h1>
+          {config.isMock && (
+            <span style={{ fontSize: 12, fontWeight: 600, color: '#828282', background: '#efefef', borderRadius: 6, padding: '3px 8px' }}>
+              미연동 · 예시
+            </span>
+          )}
+        </div>
         {config.hasPrimary && (
           <button
             type="button"
@@ -214,7 +229,21 @@ export function ListView({ config }: { config: ListConfig }) {
             </tr>
           </thead>
           <tbody>
-            {config.rows.map((row, ri) => (
+            {isLoading && (
+              <tr>
+                <td colSpan={config.columns.length} style={{ padding: 40, textAlign: 'center', color: '#a3a3a3', fontSize: 14 }}>
+                  불러오는 중...
+                </td>
+              </tr>
+            )}
+            {!isLoading && config.rows.length === 0 && (
+              <tr>
+                <td colSpan={config.columns.length} style={{ padding: 40, textAlign: 'center', color: '#a3a3a3', fontSize: 14 }}>
+                  데이터가 없습니다
+                </td>
+              </tr>
+            )}
+            {!isLoading && config.rows.map((row, ri) => (
               <tr
                 key={ri}
                 onClick={row.onOpen}
@@ -259,6 +288,8 @@ export function ListView({ config }: { config: ListConfig }) {
       >
         <button
           type="button"
+          onClick={() => onPageChange?.(Math.max(1, currentPage - 1))}
+          disabled={currentPage <= 1}
           style={{
             width: 38,
             height: 38,
@@ -266,7 +297,8 @@ export function ListView({ config }: { config: ListConfig }) {
             borderRadius: 10,
             background: '#fff',
             color: '#a3a3a3',
-            cursor: 'pointer',
+            cursor: currentPage <= 1 ? 'default' : 'pointer',
+            opacity: currentPage <= 1 ? 0.4 : 1,
           }}
         >
           ‹
@@ -275,6 +307,7 @@ export function ListView({ config }: { config: ListConfig }) {
           <button
             key={p.n}
             type="button"
+            onClick={() => onPageChange?.(p.n)}
             style={{
               minWidth: 38,
               height: 38,
@@ -293,6 +326,8 @@ export function ListView({ config }: { config: ListConfig }) {
         ))}
         <button
           type="button"
+          onClick={() => onPageChange?.(Math.min(totalPage ?? currentPage, currentPage + 1))}
+          disabled={!totalPage || currentPage >= totalPage}
           style={{
             width: 38,
             height: 38,
@@ -300,7 +335,8 @@ export function ListView({ config }: { config: ListConfig }) {
             borderRadius: 10,
             background: '#fff',
             color: '#5f5f5f',
-            cursor: 'pointer',
+            cursor: (!totalPage || currentPage >= totalPage) ? 'default' : 'pointer',
+            opacity: (!totalPage || currentPage >= totalPage) ? 0.4 : 1,
           }}
         >
           ›
