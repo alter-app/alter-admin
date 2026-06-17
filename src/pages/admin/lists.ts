@@ -70,6 +70,7 @@ export interface Tab {
 
 export interface ListConfig {
   title: string
+  subtitle?: string
   columns: Column[]
   rows: Row[]
   filters: Filter[]
@@ -94,9 +95,20 @@ const tab = (active: boolean, label: string, on: () => void): Tab => ({
   bar: active ? '#07c079' : 'transparent',
 })
 
+export function workspaceTabs(
+  active: WorkspaceSub,
+  selectWorkspaceSub: (sub: WorkspaceSub) => void
+): Tab[] {
+  return [
+    tab(active === 'requests', '업장 등록 신청', () => selectWorkspaceSub('requests')),
+    tab(active === 'manage', '업장 관리', () => selectWorkspaceSub('manage')),
+  ]
+}
+
 function membersList(a: ListActions): ListConfig {
   return {
     title: '회원 관리',
+    subtitle: '가입 회원 조회 · 상태 변경 · 평판 관리',
     columns: [
       { label: '이메일', align: 'left', width: '22%' },
       { label: '이름', align: 'left', width: '10%' },
@@ -132,6 +144,7 @@ function membersList(a: ListActions): ListConfig {
 function jobsList(a: ListActions): ListConfig {
   return {
     title: '공고 관리',
+    subtitle: '등록 공고 이력 조회 · 강제 수정 · 제재 (예시 데이터)',
     columns: [
       { label: '공고 제목', align: 'left', width: '34%' },
       { label: '업장명', align: 'left', width: '18%' },
@@ -193,6 +206,7 @@ function wsRequestsList(a: ListActions): ListConfig {
 function wsManageList(a: ListActions): ListConfig {
   return {
     title: '업장 관리',
+    subtitle: '등록 업장 모니터링 · 스케줄 관리 (예시 데이터)',
     columns: [
       { label: '업장명', align: 'left', width: '26%' },
       { label: '주소', align: 'left', width: '34%' },
@@ -225,6 +239,7 @@ function wsManageList(a: ListActions): ListConfig {
 function reportsList(a: ListActions): ListConfig {
   return {
     title: '신고 관리',
+    subtitle: '접수된 신고 처리 · 계정 제재',
     columns: [
       { label: '대상 유형', align: 'left', width: '14%' },
       { label: '대상', align: 'left', width: '30%' },
@@ -323,14 +338,7 @@ export function buildListConfig(
         workspaceSub === 'requests'
           ? wsRequestsList(actions)
           : wsManageList(actions)
-      config.tabs = [
-        tab(workspaceSub === 'requests', '업장 등록 신청', () =>
-          actions.selectWorkspaceSub('requests')
-        ),
-        tab(workspaceSub === 'manage', '업장 관리', () =>
-          actions.selectWorkspaceSub('manage')
-        ),
-      ]
+      config.tabs = workspaceTabs(workspaceSub, actions.selectWorkspaceSub)
       return config
     }
     default:
