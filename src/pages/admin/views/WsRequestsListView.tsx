@@ -5,10 +5,11 @@ import { useWorkspaceRequests } from '@/features/workspace-requests/hooks/useWor
 import { useAdminStore } from '@/shared/stores/useAdminStore'
 import type { WsRequestListItem } from '@/features/workspace-requests/types'
 import { ListView } from './ListView'
-import type { ListConfig } from '../lists'
+import { workspaceTabs, type ListConfig } from '../lists'
 
 export function WsRequestsListView() {
   const openDetail = useAdminStore(s => s.openDetail)
+  const selectWorkspaceSub = useAdminStore(s => s.selectWorkspaceSub)
   const [currentPage, setCurrentPage] = useState(1)
   const PAGE_SIZE = 20
 
@@ -47,6 +48,8 @@ export function WsRequestsListView() {
 
   const config: ListConfig = {
     title: '업장 관리',
+    subtitle: '업장 등록 신청 심사 · 승인 / 반려',
+    tabs: workspaceTabs('requests', selectWorkspaceSub),
     columns: [
       { label: '업장명', align: 'left', width: '26%' },
       { label: '주소', align: 'left', width: '38%' },
