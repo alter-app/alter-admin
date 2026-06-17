@@ -71,14 +71,21 @@ export function ListView({ config, currentPage = 1, totalPage, onPageChange, isL
           marginBottom: 18,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>
-            {config.title}
-          </h1>
-          {config.isMock && (
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#828282', background: '#efefef', borderRadius: 6, padding: '3px 8px' }}>
-              미연동 · 예시
-            </span>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600 }}>
+              {config.title}
+            </h1>
+            {config.isMock && (
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#828282', background: '#efefef', borderRadius: 6, padding: '3px 8px' }}>
+                미연동 · 예시
+              </span>
+            )}
+          </div>
+          {config.subtitle && (
+            <p style={{ margin: '6px 0 0', fontSize: 14, color: '#828282' }}>
+              {config.subtitle}
+            </p>
           )}
         </div>
         {config.hasPrimary && (
