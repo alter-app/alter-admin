@@ -240,9 +240,22 @@ export interface ChartView {
   yoy: string
 }
 
-export function buildChart(metric: Metric, period: Period): ChartView {
-  const series = charts[metric][period]
-  const { values, labels } = series
+export interface ApiChartSeries {
+  dataPoints: { label: string; value: number }[]
+  yearOverYearGrowthRate: number
+}
+
+export function buildChart(metric: Metric, period: Period, apiSeries?: ApiChartSeries): ChartView {
+  let values: number[]
+  let labels: string[]
+  if (apiSeries && apiSeries.dataPoints.length > 0) {
+    values = apiSeries.dataPoints.map(p => p.value)
+    labels = apiSeries.dataPoints.map(p => p.label)
+  } else {
+    const series = charts[metric][period]
+    values = series.values
+    labels = series.labels
+  }
   const W = 760
   const H = 250
   const padTop = 20
@@ -279,7 +292,9 @@ export function buildChart(metric: Metric, period: Period): ChartView {
     const val = Math.round(max - ((max - min) * g) / 3)
     return { y: y.toFixed(1), ty: (y - 4).toFixed(1), label: val.toLocaleString() }
   })
-  const yoy = metric === 'members' ? '+14.5%' : '+24.1%'
+  const yoy = apiSeries
+    ? `${apiSeries.yearOverYearGrowthRate > 0 ? '+' : ''}${(apiSeries.yearOverYearGrowthRate * 100).toFixed(1)}%`
+    : metric === 'members' ? '+14.5%' : '+24.1%'
   return { linePath, areaPath, dots, grid, yoy }
 }
 

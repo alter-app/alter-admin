@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { useAuthStore } from '@/shared/stores/useAuthStore'
 import type {
   Job,
   Member,
@@ -34,6 +35,16 @@ export interface ConfirmCfg {
   desc: string
   label: string
   color: string
+  onConfirm?: () => void | Promise<void>
+}
+
+// Payload carried by password/reject modals
+export interface PasswordModalPayload {
+  userId: number
+}
+
+export interface RejectModalPayload {
+  workspaceRequestId: number
 }
 
 interface AdminState {
@@ -42,6 +53,8 @@ interface AdminState {
   detail: Detail | null
   modal: ModalKind
   confirmCfg: ConfirmCfg | null
+  passwordPayload: PasswordModalPayload | null
+  rejectPayload: RejectModalPayload | null
   chartMetric: Metric
   period: Period
   collapsed: boolean
@@ -54,8 +67,8 @@ interface AdminState {
   toggleUserMenu: () => void
   setMetric: (metric: Metric) => void
   setPeriod: (period: Period) => void
-  openPasswordModal: () => void
-  openRejectModal: () => void
+  openPasswordModal: (payload?: PasswordModalPayload) => void
+  openRejectModal: (payload?: RejectModalPayload) => void
   openConfirm: (cfg: ConfirmCfg) => void
   closeModal: () => void
   openLogout: () => void
@@ -67,6 +80,8 @@ export const useAdminStore = create<AdminState>(set => ({
   detail: null,
   modal: null,
   confirmCfg: null,
+  passwordPayload: null,
+  rejectPayload: null,
   chartMetric: 'members',
   period: 'monthly',
   collapsed: false,
@@ -81,10 +96,10 @@ export const useAdminStore = create<AdminState>(set => ({
   setMetric: metric => set({ chartMetric: metric }),
   setPeriod: period => set({ period }),
 
-  openPasswordModal: () => set({ modal: 'password', userMenuOpen: false }),
-  openRejectModal: () => set({ modal: 'reject' }),
+  openPasswordModal: (payload) => set({ modal: 'password', userMenuOpen: false, passwordPayload: payload ?? null }),
+  openRejectModal: (payload) => set({ modal: 'reject', rejectPayload: payload ?? null }),
   openConfirm: cfg => set({ modal: 'confirm', confirmCfg: cfg }),
-  closeModal: () => set({ modal: null }),
+  closeModal: () => set({ modal: null, confirmCfg: null, passwordPayload: null, rejectPayload: null }),
   openLogout: () =>
     set({
       modal: 'confirm',
@@ -94,6 +109,9 @@ export const useAdminStore = create<AdminState>(set => ({
         desc: '관리자 계정에서 로그아웃하시겠어요?',
         label: '로그아웃',
         color: '#dc0000',
+        onConfirm: () => {
+          useAuthStore.getState().logout()
+        },
       },
     }),
 }))
