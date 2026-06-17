@@ -1,5 +1,5 @@
-import { ADMIN_EMAIL } from '@/shared/admin/data'
 import { useAdminStore } from '@/shared/stores/useAdminStore'
+import { useAuthStore } from '@/shared/stores/useAuthStore'
 import type { Detail, MenuKey } from '@/shared/stores/useAdminStore'
 
 const MENU_LABELS: Record<MenuKey, string> = {
@@ -45,6 +45,7 @@ export function Header() {
   const toggleUserMenu = useAdminStore(s => s.toggleUserMenu)
   const openPasswordModal = useAdminStore(s => s.openPasswordModal)
   const openLogout = useAdminStore(s => s.openLogout)
+  const adminEmail = useAuthStore(s => s.scope === 'ADMIN' ? (s.token ? '관리자' : '') : '')
 
   let leaf: string | null = '목록'
   if (menu === 'dashboard') leaf = null
@@ -186,7 +187,7 @@ export function Header() {
             }}
           >
             <span style={{ fontSize: 13, fontWeight: 500, color: '#232323' }}>
-              {ADMIN_EMAIL}
+              {adminEmail || '관리자'}
             </span>
             <span style={{ color: '#a3a3a3', fontSize: 11 }}>▾</span>
           </button>
@@ -221,7 +222,7 @@ export function Header() {
                     marginTop: 4,
                   }}
                 >
-                  {ADMIN_EMAIL}
+                  {adminEmail || '관리자'}
                 </div>
               </div>
               <div
@@ -229,7 +230,7 @@ export function Header() {
               />
               <button
                 type="button"
-                onClick={openPasswordModal}
+                onClick={() => openPasswordModal()}
                 className="adm-hover-f4"
                 style={{
                   display: 'flex',
