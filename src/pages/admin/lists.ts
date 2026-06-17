@@ -78,6 +78,7 @@ export interface ListConfig {
   primaryLabel?: string
   onPrimary?: () => void
   tabs?: Tab[]
+  isMock?: boolean // true → show '미연동 · 예시' badge
 }
 
 export interface ListActions {
@@ -156,6 +157,7 @@ function jobsList(a: ListActions): ListConfig {
       { kind: 'select', label: '게시 상태', options: ['전체', '게시중', '검토중', '마감', '비활성'] },
       { kind: 'input', label: '검색', placeholder: '공고 제목 / 업장명' },
     ],
+    isMock: true,
   }
 }
 
@@ -216,6 +218,7 @@ function wsManageList(a: ListActions): ListConfig {
       { kind: 'select', label: '상태', options: ['전체', '영업중', '휴업', '정지'] },
       { kind: 'input', label: '검색', placeholder: '업장명 / 주소' },
     ],
+    isMock: true,
   }
 }
 
